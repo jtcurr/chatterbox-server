@@ -22,6 +22,9 @@ this file and include it in basic-server.js so that it actually works.
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
+//var messages = require('./messages');
+
+
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -45,13 +48,28 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  var statusCode = 300;
+
+  var statusCode = 404;
   var data;
+  var fs = require('fs');
+  var body = '';
   if (request.method === 'GET' && request.url === '/classes/messages') {
     statusCode = 200;
-    console.log('yes');
-    data = {};
+    data = {"results" : []};
   }
+  if (request.method === 'POST' && request.url === '/classes/messages') {
+    statusCode = 201;
+    var body = '';
+    request.on('data', function (data) {
+      body += data;
+      request.on('end', function () {
+        var post = qs.parse(body);
+      });
+      console.log(JSON.parse(body));
+    });
+    console.log("POSTPOSTPOSTPOSTPOSTPOSTPOSTPOSTPOST");
+  }
+
   
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
@@ -76,7 +94,7 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   //response.write(JSON.stringify(data));
-  console.log(response);
+
   response.end(JSON.stringify(data));
 };
 
