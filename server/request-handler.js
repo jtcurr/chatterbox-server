@@ -31,7 +31,7 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
-
+var fs = require('fs');
 var messages = [];
 
 var requestHandler = function(request, response) {
@@ -49,22 +49,45 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  
+  var sendCode = function(code) {
+    response.writeHead(code, headers);
+    response.end(JSON.stringify(data));
+  };
 
   var statusCode = 404;
   var data;
+  if (request.url !== '/classes/messages') {
+    sendCode(statusCode);
+  }  
+
   if (request.method === 'GET' && request.url === '/classes/messages') {
     statusCode = 200;
     data = {"results" : messages};
+    sendCode(statusCode);
   }
   if (request.method === 'POST' && request.url === '/classes/messages') {
     statusCode = 201;
-    var body = '';
+    body = '';
     request.on('data', function (data) {
       body += data;
       messages.push(JSON.parse(body));
-    });
-  }
+      var origData = JSON.parse(body);
+      if (origData.username === null) {
+        statusCode = 400;
 
+      } else {
+        statusCode = 201;
+      }
+      sendCode(statusCode);
+    });
+
+  }
+  if (request.method === 'DELETE' && request.url === '/classes/messages') {
+    statusCode = 200;
+    data = {"results" : messages};
+    sendCode(statusCode);
+  }
   
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
@@ -79,8 +102,6 @@ var requestHandler = function(request, response) {
   headers['Content-Type'] = 'application/json'; 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
-
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
@@ -88,11 +109,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  //response.write(JSON.stringify(data));
-
-  response.end(JSON.stringify(data));
 };
 
 //make requestHandler available in all files
 exports.requestHandler = requestHandler;
-
