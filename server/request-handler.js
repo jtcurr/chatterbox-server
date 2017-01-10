@@ -32,6 +32,7 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+var messages = [];
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -51,23 +52,17 @@ var requestHandler = function(request, response) {
 
   var statusCode = 404;
   var data;
-  var fs = require('fs');
-  var body = '';
   if (request.method === 'GET' && request.url === '/classes/messages') {
     statusCode = 200;
-    data = {"results" : []};
+    data = {"results" : messages};
   }
   if (request.method === 'POST' && request.url === '/classes/messages') {
     statusCode = 201;
     var body = '';
     request.on('data', function (data) {
       body += data;
-      request.on('end', function () {
-        var post = qs.parse(body);
-      });
-      console.log(JSON.parse(body));
+      messages.push(JSON.parse(body));
     });
-    console.log("POSTPOSTPOSTPOSTPOSTPOSTPOSTPOSTPOST");
   }
 
   
